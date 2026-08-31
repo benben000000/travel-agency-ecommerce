@@ -83,10 +83,10 @@ export async function POST(request) {
       await syncMessageToNeon(newMessage, db);
     }
 
-    // AI AUTO-RESPONDER: If the sender is a traveler, synchronously generate and commit host reply
+    // AI AUTO-RESPONDER: If the sender is a client/traveler, synchronously generate and commit host reply
     let agentReplyMessage = null;
-    const isTravelerSender = uid === conv.user_id || session.user.role === 'user';
-    if (isTravelerSender && process.env.HUGGINGFACE_API_KEY) {
+    const isTravelerSender = uid !== conv.agent_id;
+    if (isTravelerSender) {
       try {
         const aiReply = await generateAgentAutoReply({
           conv,
