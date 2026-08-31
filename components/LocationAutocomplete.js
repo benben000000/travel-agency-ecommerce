@@ -14,7 +14,6 @@ export default function LocationAutocomplete({
   const [suggestions, setSuggestions] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [loading, setLoading] = useState(false);
 
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
@@ -66,7 +65,11 @@ export default function LocationAutocomplete({
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   function handleInputChange(e) {
@@ -123,7 +126,11 @@ export default function LocationAutocomplete({
   }
 
   return (
-    <div ref={wrapperRef} className={`location-autocomplete-wrap ${className}`} style={{ position: 'relative', width: '100%' }}>
+    <div
+      ref={wrapperRef}
+      className={`location-autocomplete-wrap ${className}`}
+      style={{ position: 'relative', width: '100%' }}
+    >
       <input
         ref={inputRef}
         type="text"
@@ -132,12 +139,23 @@ export default function LocationAutocomplete({
         value={query}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
+        onClick={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
         autoComplete="off"
+        style={{ width: '100%', cursor: 'text' }}
       />
 
       {isOpen && (
-        <div className="location-suggestions-dropdown">
+        <div
+          className="location-suggestions-dropdown"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+          }}
+        >
           <div className="location-dropdown-header">
             {query.trim() ? (
               <span>Matching Destinations ({suggestions.length})</span>
@@ -160,9 +178,18 @@ export default function LocationAutocomplete({
                     className={`location-suggestion-item ${isSelected ? 'selected' : ''}`}
                     onMouseDown={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
+                      handleSelect(loc);
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       handleSelect(loc);
                     }}
                     onMouseEnter={() => setSelectedIndex(idx)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
                   >
                     <div className="loc-icon-badge">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

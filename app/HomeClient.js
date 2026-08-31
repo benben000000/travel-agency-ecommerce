@@ -13,11 +13,35 @@ export default function HomeClient({ packages, destinations, activities, setting
   const [checkOut, setCheckOut] = useState('');
   const [travelers, setTravelers] = useState('2');
 
+  const placeholderText =
+    activeTab === 'destinations'
+      ? 'Search destination or country (e.g. Japan, Norway, Italy)'
+      : activeTab === 'guides'
+      ? 'Search guided tours (e.g. Safari, Glacier, Catamaran)'
+      : activeTab === 'custom'
+      ? 'Where would you like your custom itinerary?'
+      : 'Where to? (e.g. Kyoto, Tromsø)';
+
+  const labelText =
+    activeTab === 'destinations'
+      ? 'Select Destination'
+      : activeTab === 'guides'
+      ? 'Select Tour Activity'
+      : activeTab === 'custom'
+      ? 'Custom Destination'
+      : 'Select Tour Place';
+
   function handleSearchSubmit(e) {
     e.preventDefault();
+    if (activeTab === 'custom') {
+      router.push(`/contact?subject=Custom+Itinerary+Request&destination=${encodeURIComponent(searchPlace)}`);
+      return;
+    }
     const params = new URLSearchParams();
     if (searchPlace.trim()) params.set('search', searchPlace.trim());
     if (travelers) params.set('guests', travelers);
+    if (checkIn) params.set('check_in', checkIn);
+    if (checkOut) params.set('check_out', checkOut);
     router.push(`/packages?${params.toString()}`);
   }
 
@@ -78,7 +102,7 @@ export default function HomeClient({ packages, destinations, activities, setting
 
           <form className="search-form-row" onSubmit={handleSearchSubmit}>
             <div className="search-field" style={{ position: 'relative' }}>
-              <label>Select Tour Place</label>
+              <label>{labelText}</label>
               <div className="search-input-box" style={{ position: 'relative' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', flexShrink: 0 }}>
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -88,7 +112,7 @@ export default function HomeClient({ packages, destinations, activities, setting
                   value={searchPlace}
                   onChange={(val) => setSearchPlace(val)}
                   onSelect={(loc) => setSearchPlace(loc.city || loc.label)}
-                  placeholder="Where to? (e.g. Kyoto, Tromsø)"
+                  placeholder={placeholderText}
                 />
               </div>
             </div>
