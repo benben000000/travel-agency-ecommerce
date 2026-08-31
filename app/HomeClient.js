@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PackageCard from '@/components/PackageCard';
+import LocationAutocomplete from '@/components/LocationAutocomplete';
 
 export default function HomeClient({ packages, destinations, activities, settings }) {
   const router = useRouter();
@@ -76,18 +77,18 @@ export default function HomeClient({ packages, destinations, activities, setting
           </div>
 
           <form className="search-form-row" onSubmit={handleSearchSubmit}>
-            <div className="search-field">
+            <div className="search-field" style={{ position: 'relative' }}>
               <label>Select Tour Place</label>
-              <div className="search-input-box">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)' }}>
+              <div className="search-input-box" style={{ position: 'relative' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', flexShrink: 0 }}>
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                <input
-                  type="text"
-                  placeholder="Where to? (e.g. Kyoto, Tromsø)"
+                <LocationAutocomplete
                   value={searchPlace}
-                  onChange={(e) => setSearchPlace(e.target.value)}
+                  onChange={(val) => setSearchPlace(val)}
+                  onSelect={(loc) => setSearchPlace(loc.city || loc.label)}
+                  placeholder="Where to? (e.g. Kyoto, Tromsø)"
                 />
               </div>
             </div>

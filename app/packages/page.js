@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import PackageCard from '@/components/PackageCard';
+import LocationAutocomplete from '@/components/LocationAutocomplete';
 
 function PackagesContent() {
   const searchParams = useSearchParams();
@@ -113,14 +114,21 @@ function PackagesContent() {
         </div>
 
         <form className="filters-bar" onSubmit={applyFilters}>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Search destination, keywords..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            style={{ flex: 1, minWidth: '180px' }}
-          />
+          <div style={{ flex: 1, minWidth: '220px', position: 'relative' }}>
+            <LocationAutocomplete
+              value={filters.search}
+              onChange={(val) => setFilters({ ...filters, search: val })}
+              onSelect={(loc) => {
+                const term = loc.city || loc.label;
+                setFilters({ ...filters, search: term });
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('search', term);
+                router.push(`/packages?${params.toString()}`);
+              }}
+              placeholder="Search destination, keywords..."
+              inputClassName="form-input"
+            />
+          </div>
           <select
             className="form-select"
             value={filters.destination}

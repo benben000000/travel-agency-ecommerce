@@ -1700,3 +1700,117 @@ p:last-child { margin-bottom: 0; }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ===== LOCATION AUTOCOMPLETE DROPDOWN ===== */
+.location-autocomplete-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.location-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 280px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14), 0 4px 12px rgba(15, 23, 42, 0.08);
+  z-index: 1000;
+  max-height: 340px;
+  overflow-y: auto;
+  animation: slideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.location-dropdown-header {
+  padding: 10px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+}
+
+.location-suggestions-list {
+  padding: 6px 0;
+}
+
+.location-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.location-suggestion-item:hover,
+.location-suggestion-item.selected {
+  background: var(--color-primary-light);
+}
+
+.loc-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-bg-alt);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.location-suggestion-item.selected .loc-icon-badge,
+.location-suggestion-item:hover .loc-icon-badge {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.loc-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.loc-city {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loc-country {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-top: 1px;
+}
+
+.loc-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-alt);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.location-suggestion-item.selected .loc-badge,
+.location-suggestion-item:hover .loc-badge {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.location-no-match {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}
