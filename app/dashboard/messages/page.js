@@ -14,6 +14,7 @@ function UserMessagesContent() {
   const [inputMsg, setInputMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [mobileChatOpen, setMobileChatOpen] = useState(Boolean(initialConvId));
   
   const chatMessagesBoxRef = useRef(null);
   const userScrolledUpRef = useRef(false);
@@ -58,8 +59,12 @@ function UserMessagesContent() {
         setConversations(data.conversations);
         if (initialConvId) {
           const match = data.conversations.find((c) => c.id === parseInt(initialConvId));
-          if (match) setActiveConv(match);
-          else if (data.conversations.length > 0) setActiveConv(data.conversations[0]);
+          if (match) {
+            setActiveConv(match);
+            setMobileChatOpen(true);
+          } else if (data.conversations.length > 0) {
+            setActiveConv(data.conversations[0]);
+          }
         } else if (data.conversations.length > 0) {
           setActiveConv((prev) => prev || data.conversations[0]);
         }
@@ -143,7 +148,7 @@ function UserMessagesContent() {
         </div>
       ) : (
         <div className="chat-container">
-          <div className="chat-sidebar">
+          <div className={`chat-sidebar ${mobileChatOpen ? 'mobile-hidden' : ''}`}>
             {conversations.map((c) => {
               const otherName = c.agent_company || c.agent_name || 'Tour Operator';
               const isSelected = activeConv?.id === c.id;
@@ -151,7 +156,10 @@ function UserMessagesContent() {
                 <div
                   key={c.id}
                   className={`chat-sidebar-item ${isSelected ? 'active' : ''}`}
-                  onClick={() => setActiveConv(c)}
+                  onClick={() => {
+                    setActiveConv(c);
+                    setMobileChatOpen(true);
+                  }}
                 >
                   <div className="chat-name">{otherName}</div>
                   {c.package_title && (
@@ -165,16 +173,27 @@ function UserMessagesContent() {
             })}
           </div>
 
-          <div className="chat-main">
+          <div className={`chat-main ${!mobileChatOpen ? 'mobile-hidden' : ''}`}>
             {activeConv ? (
               <>
                 <div className="chat-header">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: '700', color: 'var(--color-text)' }}>
+                  <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => setMobileChatOpen(false)}
+                    aria-label="Back to conversations list"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span>Chats</span>
+                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: '700', color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {activeConv.agent_company || activeConv.agent_name || 'Tour Operator'}
                     </span>
                     {activeConv.package_title && (
-                      <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         &bull; {activeConv.package_title}
                       </span>
                     )}

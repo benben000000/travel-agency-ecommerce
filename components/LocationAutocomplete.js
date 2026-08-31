@@ -175,7 +175,8 @@ export default function LocationAutocomplete({
             top: 'calc(100% + 8px)',
             left: 0,
             right: 0,
-            minWidth: '320px',
+            width: '100%',
+            minWidth: '100%',
             zIndex: 9999,
           }}
         >

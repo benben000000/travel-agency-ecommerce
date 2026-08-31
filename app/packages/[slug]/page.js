@@ -147,7 +147,7 @@ export default function PackageDetailPage() {
   const highlights = pkg.highlights ? pkg.highlights.split('\n').filter(Boolean) : [];
 
   return (
-    <div className="page-content">
+    <div className="page-content package-detail-page-content">
       <div className="container">
         {/* Header */}
         <div className="package-detail-header">
@@ -533,6 +533,42 @@ export default function PackageDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Sticky Bottom Booking Bar (visible only on mobile < 860px) */}
+        {bookingStep === 0 && (
+          <div className="mobile-bottom-booking-bar">
+            <div className="mobile-booking-info">
+              <span className="mobile-booking-price">${(pkg.price_amount / 100).toFixed(0)}</span>
+              <span className="mobile-booking-unit">/ {pkg.price_per || 'person'}</span>
+            </div>
+            <div className="mobile-booking-btns">
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleContactOperator}
+              >
+                Message
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  if (!session) {
+                    router.push('/login');
+                  } else {
+                    setBookingStep(1);
+                    const el = document.querySelector('.booking-sidebar');
+                    if (el) {
+                      window.scrollTo({ top: el.offsetTop - 80, behavior: 'smooth' });
+                    }
+                  }
+                }}
+              >
+                Book Now
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
