@@ -1814,3 +1814,228 @@ p:last-child { margin-bottom: 0; }
   color: var(--color-text-secondary);
   font-size: 0.88rem;
 }
+
+/* ===== FIXED SIZE PACKAGE IMAGE VIEWER ===== */
+.package-viewer-container {
+  margin-bottom: 36px;
+}
+
+.package-viewer-main {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: #0f172a;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+}
+
+.package-viewer-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: opacity 0.25s ease-in-out, transform 0.4s ease;
+  cursor: pointer;
+}
+
+.package-viewer-main img:hover {
+  transform: scale(1.015);
+}
+
+.viewer-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 5;
+}
+
+.viewer-nav-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.viewer-nav-btn.prev {
+  left: 16px;
+}
+
+.viewer-nav-btn.next {
+  right: 16px;
+}
+
+.viewer-counter-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.viewer-fullscreen-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 5;
+}
+
+.viewer-fullscreen-btn:hover {
+  background: var(--color-primary);
+  transform: scale(1.08);
+}
+
+.package-viewer-thumbnails {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.viewer-thumb-item {
+  width: 100px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: var(--transition);
+  background: var(--color-bg-alt);
+}
+
+.viewer-thumb-item:hover {
+  opacity: 0.95;
+  transform: translateY(-2px);
+}
+
+.viewer-thumb-item.active {
+  opacity: 1;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+  transform: translateY(-2px);
+}
+
+.viewer-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 900px) {
+  .package-viewer-main {
+    height: 380px;
+  }
+  .viewer-thumb-item {
+    width: 80px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 600px) {
+  .package-viewer-main {
+    height: 260px;
+    border-radius: var(--radius-lg);
+  }
+  .viewer-nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .viewer-nav-btn.prev {
+    left: 8px;
+  }
+  .viewer-nav-btn.next {
+    right: 8px;
+  }
+}
+
+/* Lightbox Modal */
+.lightbox-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 30, 0.94);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.lightbox-modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 88vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-modal-content img {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-close-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 10001;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}

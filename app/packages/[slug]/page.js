@@ -16,6 +16,8 @@ export default function PackageDetailPage() {
   });
   const [promoResult, setPromoResult] = useState(null);
   const [bookingStep, setBookingStep] = useState(0); // 0=idle, 1=form, 2=payment, 3=success
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [bookingRef, setBookingRef] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -27,6 +29,31 @@ export default function PackageDetailPage() {
       setLoading(false);
     });
   }, [slug]);
+
+  const images = pkg?.images && pkg.images.length > 0
+    ? pkg.images
+    : [{ image_url: '/images/placeholder-travel.jpg', alt_text: pkg?.title || 'Travel Package' }];
+
+  function handlePrevImage(e) {
+    if (e) e.stopPropagation();
+    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  }
+
+  function handleNextImage(e) {
+    if (e) e.stopPropagation();
+    setActiveImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (!lightboxOpen) return;
+      if (e.key === 'ArrowLeft') handlePrevImage();
+      else if (e.key === 'ArrowRight') handleNextImage();
+      else if (e.key === 'Escape') setLightboxOpen(false);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, images.length]);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -137,17 +164,129 @@ export default function PackageDetailPage() {
           </div>
         </div>
 
-        {/* Images */}
-        {pkg.images && pkg.images.length > 0 && (
-          <div className="package-gallery">
-            <img src={pkg.images[0]?.image_url} alt={pkg.images[0]?.alt_text || pkg.title} onError={(e) => { e.target.src = '/images/placeholder-travel.jpg'; }} />
-            {pkg.images.length > 1 && (
-              <div className="package-gallery-side">
-                {pkg.images.slice(1, 3).map((img, idx) => (
-                  <img key={idx} src={img.image_url} alt={img.alt_text || ''} onError={(e) => { e.target.src = '/images/placeholder-travel.jpg'; }} />
-                ))}
-              </div>
+        {/* ===== FIXED SIZE INTERACTIVE IMAGE VIEWER & CAROUSEL ===== */}
+        <div className="package-viewer-container">
+          <div className="package-viewer-main">
+            <img
+              src={images[activeImageIndex]?.image_url}
+              alt={images[activeImageIndex]?.alt_text || pkg.title}
+              onClick={() => setLightboxOpen(true)}
+              onError={(e) => { e.target.src = '/images/placeholder-travel.jpg'; }}
+            />
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="viewer-nav-btn prev"
+                  onClick={handlePrevImage}
+                  aria-label="Previous photo"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="viewer-nav-btn next"
+                  onClick={handleNextImage}
+                  aria-label="Next photo"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </>
             )}
+
+            <div className="viewer-counter-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <span>{activeImageIndex + 1} / {images.length}</span>
+            </div>
+
+            <button
+              type="button"
+              className="viewer-fullscreen-btn"
+              onClick={() => setLightboxOpen(true)}
+              aria-label="View fullscreen photo"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </button>
+          </div>
+
+          {images.length > 1 && (
+            <div className="package-viewer-thumbnails">
+              {images.map((img, idx) => (
+                <div
+                  key={idx}
+                  className={`viewer-thumb-item ${idx === activeImageIndex ? 'active' : ''}`}
+                  onClick={() => setActiveImageIndex(idx)}
+                >
+                  <img
+                    src={img.image_url}
+                    alt={img.alt_text || `Photo ${idx + 1}`}
+                    onError={(e) => { e.target.src = '/images/placeholder-travel.jpg'; }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ===== FULLSCREEN LIGHTBOX MODAL ===== */}
+        {lightboxOpen && (
+          <div className="lightbox-modal-overlay" onClick={() => setLightboxOpen(false)}>
+            <button
+              type="button"
+              className="lightbox-close-btn"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="viewer-nav-btn prev"
+                  style={{ left: '32px', width: '52px', height: '52px' }}
+                  onClick={handlePrevImage}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="viewer-nav-btn next"
+                  style={{ right: '32px', width: '52px', height: '52px' }}
+                  onClick={handleNextImage}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </>
+            )}
+
+            <div className="lightbox-modal-content" onClick={(e) => e.stopPropagation()}>
+              <img
+                src={images[activeImageIndex]?.image_url}
+                alt={images[activeImageIndex]?.alt_text || pkg.title}
+              />
+            </div>
           </div>
         )}
 
