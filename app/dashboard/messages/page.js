@@ -14,7 +14,10 @@ function UserMessagesContent() {
   const [inputMsg, setInputMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  
   const chatMessagesBoxRef = useRef(null);
+  const userScrolledUpRef = useRef(false);
+  const prevConvIdRef = useRef(null);
 
   useEffect(() => {
     fetchConversations();
@@ -22,6 +25,7 @@ function UserMessagesContent() {
 
   useEffect(() => {
     if (activeConv) {
+      userScrolledUpRef.current = false;
       fetchMessages(activeConv.id);
       const interval = setInterval(() => {
         fetchMessages(activeConv.id, true);
@@ -30,12 +34,21 @@ function UserMessagesContent() {
     }
   }, [activeConv]);
 
-  // Scroll ONLY the inner chat messages container to the bottom, without scrolling the main page window
+  // Scroll to bottom ONLY on new conversation, when user sent a message, or when already at bottom
   useEffect(() => {
-    if (chatMessagesBoxRef.current) {
+    if (!chatMessagesBoxRef.current) return;
+    const isNewConv = prevConvIdRef.current !== activeConv?.id;
+    if (isNewConv || !userScrolledUpRef.current) {
       chatMessagesBoxRef.current.scrollTop = chatMessagesBoxRef.current.scrollHeight;
     }
-  }, [messages]);
+    prevConvIdRef.current = activeConv?.id;
+  }, [messages, activeConv]);
+
+  function handleChatScroll(e) {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 60;
+    userScrolledUpRef.current = !isNearBottom;
+  }
 
   async function fetchConversations() {
     try {
@@ -60,7 +73,15 @@ function UserMessagesContent() {
       const res = await fetch(`/api/messages?conversation_id=${convId}`);
       const data = await res.json();
       if (data.messages) {
-        setMessages(data.messages);
+        setMessages((prev) => {
+          if (
+            prev.length === data.messages.length &&
+            prev[prev.length - 1]?.id === data.messages[data.messages.length - 1]?.id
+          ) {
+            return prev; // Same messages, prevent triggering scroll effect
+          }
+          return data.messages;
+        });
       }
     } catch (err) {}
   }
@@ -72,6 +93,7 @@ function UserMessagesContent() {
 
     const msgContent = inputMsg.trim();
     setInputMsg('');
+    userScrolledUpRef.current = false; // Always scroll to bottom when user sends a message
 
     try {
       const res = await fetch('/api/messages', {
@@ -159,7 +181,7 @@ function UserMessagesContent() {
                   </div>
                 </div>
 
-                <div className="chat-messages" ref={chatMessagesBoxRef}>
+                <div className="chat-messages" ref={chatMessagesBoxRef} onScroll={handleChatScroll}>
                   {messages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'var(--color-text-light)', marginTop: '40px' }}>
                       No messages in this conversation yet. Send a message to start chatting!
