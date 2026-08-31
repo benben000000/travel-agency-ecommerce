@@ -48,31 +48,38 @@
   --header-height: 72px;
 }
 
-/* ===== DARK THEME ===== */
+/* ===== DARK THEME (CHARCOAL BLACK & DARK GRAY WITH VIBRANT BLUE BUTTONS) ===== */
 [data-theme="dark"] {
-  --color-primary: #3b82f6;            /* Electric Blue for dark contrast */
-  --color-primary-hover: #60a5fa;
-  --color-primary-light: #1e293b;
-  --color-primary-dark: #020617;
+  --color-primary: #2563eb;            /* Vibrant Cobalt Blue for Buttons */
+  --color-primary-hover: #3b82f6;      /* Electric Blue Hover */
+  --color-primary-light: rgba(37, 99, 235, 0.15); /* Subtle Blue Tint */
+  --color-primary-dark: #1d4ed8;       /* Deep Active Blue */
   
   --color-accent-sky: #38bdf8;
-  --color-accent-sand: #334155;
+  --color-accent-sand: #262626;        /* Dark Charcoal Neutral */
+  --color-accent-cyan: #06b6d4;
   
-  --color-text: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-text-light: #64748b;
+  --color-text: #f3f4f6;               /* Crisp Off-White */
+  --color-text-secondary: #a1a1aa;     /* Neutral Muted Gray */
+  --color-text-light: #71717a;         /* Dim Gray */
   
-  --color-bg: #090d14;                 /* Midnight Deep Blue-Black */
-  --color-bg-alt: #0f172a;
-  --color-bg-card: #131d31;            /* Card Surface */
-  --color-bg-dark: #020617;
-  --color-hero-bg: #0f172a;
-  --color-border: #1e293b;
-  --color-border-dark: #334155;
+  --color-bg: #121212;                 /* Pure Charcoal Black Background */
+  --color-bg-alt: #181818;             /* Dark Gray Secondary Background */
+  --color-bg-card: #202020;            /* Premium Dark Gray Card Surface */
+  --color-bg-dark: #0d0d0d;            /* Deepest Charcoal Black */
+  --color-hero-bg: #181818;
+  --color-border: #2c2c2c;             /* Clean Neutral Charcoal Border (No Blue Tint) */
+  --color-border-dark: #3a3a3a;
   
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.6);
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.7);
+  --shadow-hero: 0 20px 40px rgba(0, 0, 0, 0.8);
 }
 
 /* ===== RESET & BASE ===== */
@@ -2133,11 +2140,11 @@ p:last-child { margin-bottom: 0; }
 
 .concierge-header {
   padding: 16px 20px;
-  background: linear-gradient(135deg, var(--color-primary-dark), #1e293b);
+  background: linear-gradient(135deg, #181818, #242424);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .concierge-avatar {
