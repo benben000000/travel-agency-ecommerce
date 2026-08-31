@@ -80,7 +80,7 @@ export async function POST(request) {
 
     // Sync traveler message to Neon
     if (process.env.DATABASE_URL) {
-      await syncMessageToNeon(newMessage);
+      await syncMessageToNeon(newMessage, db);
     }
 
     // AI AUTO-RESPONDER: If the sender is a traveler, synchronously generate and commit host reply
@@ -112,7 +112,7 @@ export async function POST(request) {
 
           // Sync AI agent message to Neon
           if (process.env.DATABASE_URL) {
-            await syncMessageToNeon(agentReplyMessage);
+            await syncMessageToNeon(agentReplyMessage, db);
           }
         }
       } catch (aiErr) {
