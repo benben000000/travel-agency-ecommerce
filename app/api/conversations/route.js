@@ -63,14 +63,30 @@ export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const db = getDb();
-    const { agent_id, booking_id } = await request.json();
-    if (!agent_id) return NextResponse.json({ error: 'agent_id required' }, { status: 400 });
-
+    const body = await request.json();
     const uid = parseInt(session.user.id);
-    let conv = db.prepare('SELECT * FROM conversations WHERE user_id = ? AND agent_id = ?').get(uid, parseInt(agent_id));
+    
+    let userId;
+    let agentId;
+    
+    if (session.user.role === 'agent') {
+      agentId = uid;
+      userId = parseInt(body.user_id || body.userId);
+    } else {
+      userId = uid;
+      agentId = parseInt(body.agent_id || body.agentId);
+    }
+    
+    if (!userId || !agentId) {
+      return NextResponse.json({ error: 'Both user_id and agent_id are required' }, { status: 400 });
+    }
+
+    let conv = db.prepare('SELECT * FROM conversations WHERE user_id = ? AND agent_id = ?').get(userId, agentId);
     if (!conv) {
-      const res = db.prepare('INSERT INTO conversations (user_id, agent_id, booking_id) VALUES (?, ?, ?)').run(uid, parseInt(agent_id), booking_id || null);
+      const res = db.prepare('INSERT INTO conversations (user_id, agent_id, booking_id) VALUES (?, ?, ?)').run(userId, agentId, body.booking_id || null);
       conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(res.lastInsertRowid);
+    } else if (body.booking_id && !conv.booking_id) {
+      db.prepare('UPDATE conversations SET booking_id = ? WHERE id = ?').run(body.booking_id, conv.id);
     }
     return NextResponse.json({ conversation: conv }, { status: 201 });
   } catch (error) {

@@ -90,6 +90,28 @@ export default function PackageDetailPage() {
     setSubmitting(false);
   }
 
+  async function handleContactOperator() {
+    if (!session) {
+      router.push(`/login?callbackUrl=/packages/${slug}`);
+      return;
+    }
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: pkg.agent_id }),
+      });
+      const data = await res.json();
+      if (data.conversation) {
+        router.push(`/dashboard/messages?conversation=${data.conversation.id}`);
+      } else {
+        router.push('/dashboard/messages');
+      }
+    } catch (err) {
+      router.push('/dashboard/messages');
+    }
+  }
+
   if (loading) return <div className="loading-page"><div className="loading-spinner"></div></div>;
   if (!pkg) return <div className="page-content"><div className="container"><div className="empty-state"><h3>Package not found</h3></div></div></div>;
 
@@ -356,7 +378,15 @@ export default function PackageDetailPage() {
                   {pkg.agent_name && bookingStep === 0 && (
                     <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
                       <p style={{ fontSize: '0.85rem', color: 'var(--color-text-light)', marginBottom: '4px' }}>Hosted by</p>
-                      <p style={{ fontWeight: 600 }}>{pkg.agent_company || pkg.agent_name}</p>
+                      <p style={{ fontWeight: 600, marginBottom: '10px' }}>{pkg.agent_company || pkg.agent_name}</p>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        style={{ width: '100%' }}
+                        onClick={handleContactOperator}
+                      >
+                        Message Tour Operator
+                      </button>
                     </div>
                   )}
                 </>
