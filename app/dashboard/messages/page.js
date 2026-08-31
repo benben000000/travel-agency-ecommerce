@@ -45,7 +45,7 @@ function UserMessagesContent() {
           if (match) setActiveConv(match);
           else if (data.conversations.length > 0) setActiveConv(data.conversations[0]);
         } else if (data.conversations.length > 0) {
-          setActiveConv(data.conversations[0]);
+          setActiveConv((prev) => prev || data.conversations[0]);
         }
       }
     } catch (err) {}
@@ -67,19 +67,28 @@ function UserMessagesContent() {
     if (!inputMsg.trim() || !activeConv || sending) return;
     setSending(true);
 
+    const msgContent = inputMsg.trim();
+    setInputMsg('');
+
     try {
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversation_id: activeConv.id,
-          content: inputMsg.trim(),
+          content: msgContent,
         }),
       });
       const data = await res.json();
       if (data.message) {
         setMessages((prev) => [...prev, data.message]);
-        setInputMsg('');
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeConv.id
+              ? { ...c, last_message: msgContent, last_message_at: new Date().toISOString() }
+              : c
+          )
+        );
       }
     } catch (err) {}
     setSending(false);
@@ -103,15 +112,15 @@ function UserMessagesContent() {
       ) : conversations.length === 0 ? (
         <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
           <h3>No Conversations Yet</h3>
-          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
-            When you book a package or message a tour operator, your conversations will appear here.
+          <p style={{ color: 'var(--color-text-secondary)' }}>
+            When you contact tour operators about itineraries or bookings, your chats will appear here.
           </p>
         </div>
       ) : (
         <div className="chat-container">
           <div className="chat-sidebar">
             {conversations.map((c) => {
-              const otherName = c.agent_name || 'Tour Agent';
+              const otherName = c.agent_company || c.agent_name || 'Tour Operator';
               const isSelected = activeConv?.id === c.id;
               return (
                 <div
@@ -121,7 +130,7 @@ function UserMessagesContent() {
                 >
                   <div className="chat-name">{otherName}</div>
                   {c.package_title && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: '600', marginBottom: '2px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: '600', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {c.package_title}
                     </div>
                   )}
@@ -135,11 +144,13 @@ function UserMessagesContent() {
             {activeConv ? (
               <>
                 <div className="chat-header">
-                  <div>
-                    <span>{activeConv.agent_name || 'Tour Agent'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: '700', color: 'var(--color-text)' }}>
+                      {activeConv.agent_company || activeConv.agent_name || 'Tour Operator'}
+                    </span>
                     {activeConv.package_title && (
-                      <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginLeft: '10px' }}>
-                        ({activeConv.package_title})
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                        &bull; {activeConv.package_title}
                       </span>
                     )}
                   </div>
@@ -148,11 +159,11 @@ function UserMessagesContent() {
                 <div className="chat-messages">
                   {messages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'var(--color-text-light)', marginTop: '40px' }}>
-                      No messages yet. Send a message below.
+                      No messages in this conversation yet. Send a message to start chatting!
                     </div>
                   ) : (
                     messages.map((m) => {
-                      const isSentByMe = m.sender_id === session?.user?.id;
+                      const isSentByMe = String(m.sender_id) === String(session?.user?.id);
                       return (
                         <div
                           key={m.id}
@@ -172,7 +183,7 @@ function UserMessagesContent() {
                 <form className="chat-input-area" onSubmit={handleSend}>
                   <input
                     type="text"
-                    placeholder="Type your message..."
+                    placeholder="Type your reply..."
                     value={inputMsg}
                     onChange={(e) => setInputMsg(e.target.value)}
                   />
@@ -183,7 +194,7 @@ function UserMessagesContent() {
               </>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-secondary)' }}>
-                Select a conversation from the list to start chatting.
+                Select a conversation on the left to start chatting.
               </div>
             )}
           </div>
