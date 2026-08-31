@@ -237,7 +237,12 @@ export default function AIConcierge() {
             {/* Auth Gate (Option 3: Soft Signup Lock after free inquiries) */}
             {isLocked && (
               <div className="concierge-auth-gate">
-                <div className="auth-gate-icon">✨</div>
+                <div className="auth-gate-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <div className="auth-gate-title">Enjoying the AI Concierge?</div>
                 <div className="auth-gate-desc">
                   Sign in or create a free account to unlock unlimited AI trip planning, save your custom itineraries, and chat directly with verified tour operators.
