@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 
+import ChatBookingCard from '@/components/ChatBookingCard';
+
 function AgentMessagesContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -207,18 +209,35 @@ function AgentMessagesContent() {
                     </div>
                   ) : (
                     messages.map((m) => {
-                      // In Agent Portal: The tour operator's messages belong on the RIGHT in BLUE (.sent),
-                      // and traveler inquiries belong on the LEFT in GRAY (.received).
                       const isSentByMe =
                         String(m.sender_id) === String(session?.user?.id) ||
                         Number(m.sender_id) === Number(activeConv?.agent_id);
+
+                      const actionMatch = m.content.match(/<!-- ACTION_BOOKING: ([\s\S]*?)-->/);
+                      let bookingData = null;
+                      if (actionMatch) {
+                        try {
+                          bookingData = JSON.parse(actionMatch[1]);
+                        } catch (e) {}
+                      }
+                      const cleanText = m.content.replace(/<!-- ACTION_BOOKING: [\s\S]*?-->/g, '').trim();
 
                       return (
                         <div
                           key={m.id}
                           className={`chat-message ${isSentByMe ? 'sent' : 'received'}`}
                         >
-                          <div>{m.content}</div>
+                          {cleanText && <div>{cleanText}</div>}
+                          {bookingData && (
+                            <ChatBookingCard
+                              bookingData={bookingData}
+                              isAgent={true}
+                              onPaymentSuccess={() => {
+                                fetchConversations();
+                                fetchMessages(activeConv.id);
+                              }}
+                            />
+                          )}
                           <div className="msg-time">
                             {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>

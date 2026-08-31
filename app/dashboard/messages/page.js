@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 
+import ChatBookingCard from '@/components/ChatBookingCard';
+
 function UserMessagesContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -207,18 +209,44 @@ function UserMessagesContent() {
                     </div>
                   ) : (
                     messages.map((m) => {
-                      // In Traveler Portal: The traveler's messages belong on the RIGHT in BLUE (.sent),
-                      // and tour operator replies belong on the LEFT in GRAY (.received).
                       const isSentByMe =
                         String(m.sender_id) === String(session?.user?.id) ||
                         Number(m.sender_id) === Number(activeConv?.user_id);
+
+                      const actionMatch = m.content.match(/<!-- ACTION_BOOKING: ([\s\S]*?)-->/);
+                      let bookingData = null;
+                      if (actionMatch) {
+                        try {
+                          bookingData = JSON.parse(actionMatch[1]);
+                        } catch (e) {}
+                      }
+                      const cleanText = m.content.replace(/<!-- ACTION_BOOKING: [\s\S]*?-->/g, '').trim();
 
                       return (
                         <div
                           key={m.id}
                           className={`chat-message ${isSentByMe ? 'sent' : 'received'}`}
                         >
-                          <div>{m.content}</div>
+                          {cleanText && <div>{cleanText}</div>}
+                          {bookingData && (
+                            <ChatBookingCard
+                              bookingData={bookingData}
+                              onPaymentSuccess={async (updated) => {
+                                fetchConversations();
+                                try {
+                                  await fetch('/api/messages', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      conversation_id: activeConv.id,
+                                      content: `Payment of $${(updated.price_amount / 100).toLocaleString('en-US', { minimumFractionDigits: 0 })} for Reservation #${updated.booking_ref} has been completed! 🎉`,
+                                    }),
+                                  });
+                                  fetchMessages(activeConv.id);
+                                } catch (e) {}
+                              }}
+                            />
+                          )}
                           <div className="msg-time">
                             {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
