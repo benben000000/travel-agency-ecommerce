@@ -273,9 +273,8 @@ function UserMessagesContent() {
                             <ChatBookingCard
                               bookingData={bookingData}
                               onPaymentSuccess={async (updated) => {
-                                fetchConversations();
                                 try {
-                                  await fetch('/api/messages', {
+                                  const res = await fetch('/api/messages', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -283,7 +282,12 @@ function UserMessagesContent() {
                                       content: `Payment of $${(updated.price_amount / 100).toLocaleString('en-US', { minimumFractionDigits: 0 })} for Reservation #${updated.booking_ref} has been completed! 🎉`,
                                     }),
                                   });
-                                  fetchMessages(activeConv.id);
+                                  const data = await res.json();
+                                  if (data.message) {
+                                    const toAdd = [data.message];
+                                    if (data.replyMessage) toAdd.push(data.replyMessage);
+                                    setMessages((prev) => [...prev, ...toAdd]);
+                                  }
                                 } catch (e) {}
                               }}
                             />

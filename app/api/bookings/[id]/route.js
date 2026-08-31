@@ -90,6 +90,18 @@ export async function PUT(request, { params }) {
       db.prepare("UPDATE bookings SET payment_status = ?, updated_at = datetime('now') WHERE id = ?").run(body.payment_status, booking.id);
     }
 
+    if (process.env.DATABASE_URL) {
+      try {
+        const { syncBookingToNeon } = await import('@/lib/neon-sync');
+        const updatedBooking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(booking.id);
+        if (updatedBooking) {
+          await syncBookingToNeon(updatedBooking);
+        }
+      } catch (syncErr) {
+        console.warn('Failed to sync updated booking to Neon:', syncErr.message);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
