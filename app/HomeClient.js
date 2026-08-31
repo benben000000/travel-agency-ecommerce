@@ -8,10 +8,80 @@ import LocationAutocomplete from '@/components/LocationAutocomplete';
 export default function HomeClient({ packages, destinations, activities, settings }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('packages');
+  const [storyTab, setStoryTab] = useState('travel');
   const [searchPlace, setSearchPlace] = useState('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [travelers, setTravelers] = useState('2');
+
+  const storyContent = {
+    travel: {
+      title: 'Our Story: Driven By Wanderlust, Powered By Experience',
+      highlight: 'We Believe That Travel Is More Than Just Visiting A New Place - It Is About Creating Lasting Memories',
+      description: 'We are committed to providing exceptional service and making every journey seamless and memorable. Join us and let us turn your travel aspirations into reality.',
+      buttonText: 'Learn More About Us',
+      buttonLink: '/about',
+      images: [
+        {
+          src: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=800&q=80',
+          alt: 'Tropical island bay',
+          large: true,
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=600&q=80',
+          alt: 'Nordic aurora borealis',
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
+          alt: 'Kyoto pagoda garden',
+        },
+      ],
+    },
+    tourism: {
+      title: 'Sustainable Tourism: Empowering Local Communities Worldwide',
+      highlight: 'Preserving Natural Wonders & Supporting Authentic Indigenous Culture Across Every Continent',
+      description: 'Every journey booked through Global One Travel directly supports verified local guides, wildlife conservation initiatives, and heritage artisans in over 40 countries.',
+      buttonText: 'Explore Responsible Travel',
+      buttonLink: '/packages',
+      images: [
+        {
+          src: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80',
+          alt: 'Serengeti safari wildlife',
+          large: true,
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=600&q=80',
+          alt: 'Machu Picchu peaks',
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80',
+          alt: 'Amalfi Coast catamaran',
+        },
+      ],
+    },
+    'best-places': {
+      title: 'Curated Expeditions: The World Most Iconic Destinations',
+      highlight: 'From Arctic Glass Igloos to Ancient Silk Road Minarets and Polynesian Atolls',
+      description: 'Discover extraordinary bucket-list itineraries thoroughly vetted for safety, luxury comfort, and peerless local expertise by certified tour operators.',
+      buttonText: 'View Top Rated Places',
+      buttonLink: '/packages?sort=rating',
+      images: [
+        {
+          src: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=80',
+          alt: 'Norwegian fjord cliffs',
+          large: true,
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=600&q=80',
+          alt: 'Petra Treasury candlelit',
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80',
+          alt: 'Bora Bora overwater villas',
+        },
+      ],
+    },
+  };
 
   const placeholderText =
     activeTab === 'destinations'
@@ -218,45 +288,53 @@ export default function HomeClient({ packages, destinations, activities, setting
           <div className="story-grid">
             <div>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <span className="search-tab-pill active">Travel</span>
-                <span className="search-tab-pill">Tourism</span>
-                <span className="search-tab-pill">Best Places</span>
+                <button
+                  type="button"
+                  className={`search-tab-pill ${storyTab === 'travel' ? 'active' : ''}`}
+                  onClick={() => setStoryTab('travel')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Travel
+                </button>
+                <button
+                  type="button"
+                  className={`search-tab-pill ${storyTab === 'tourism' ? 'active' : ''}`}
+                  onClick={() => setStoryTab('tourism')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Tourism
+                </button>
+                <button
+                  type="button"
+                  className={`search-tab-pill ${storyTab === 'best-places' ? 'active' : ''}`}
+                  onClick={() => setStoryTab('best-places')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Best Places
+                </button>
               </div>
               <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', lineHeight: '1.2' }}>
-                Our Story: Driven By Wanderlust, Powered By Experience
+                {storyContent[storyTab]?.title}
               </h2>
               <div style={{ padding: '20px', background: 'var(--color-bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', color: 'var(--color-primary)' }}>
-                  We Believe That Travel Is More Than Just Visiting A New Place - It Is About Creating Lasting Memories
+                  {storyContent[storyTab]?.highlight}
                 </h3>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem', margin: 0 }}>
-                  We are committed to providing exceptional service and making every journey seamless and memorable. Join us and let us turn your travel aspirations into reality.
+                  {storyContent[storyTab]?.description}
                 </p>
               </div>
-              <Link href="/about" className="btn btn-primary btn-lg">
-                Learn More About Us
+              <Link href={storyContent[storyTab]?.buttonLink || '/about'} className="btn btn-primary btn-lg">
+                {storyContent[storyTab]?.buttonText || 'Learn More'}
               </Link>
             </div>
 
             <div className="story-mosaic">
-              <div className="story-mosaic-item-large">
-                <img
-                  src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=800&q=80"
-                  alt="Tropical island bay"
-                />
-              </div>
-              <div className="story-mosaic-item">
-                <img
-                  src="https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=600&q=80"
-                  alt="Nordic aurora borealis"
-                />
-              </div>
-              <div className="story-mosaic-item">
-                <img
-                  src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80"
-                  alt="Kyoto pagoda garden"
-                />
-              </div>
+              {storyContent[storyTab]?.images.map((img, i) => (
+                <div key={i} className={img.large ? 'story-mosaic-item-large' : 'story-mosaic-item'}>
+                  <img src={img.src} alt={img.alt} />
+                </div>
+              ))}
             </div>
           </div>
         </div>
