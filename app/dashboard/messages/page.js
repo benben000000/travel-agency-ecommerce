@@ -188,7 +188,12 @@ function UserMessagesContent() {
                     </div>
                   ) : (
                     messages.map((m) => {
-                      const isSentByMe = String(m.sender_id) === String(session?.user?.id);
+                      // In Traveler Portal: The traveler's messages belong on the RIGHT in BLUE (.sent),
+                      // and tour operator replies belong on the LEFT in GRAY (.received).
+                      const isSentByMe =
+                        String(m.sender_id) === String(session?.user?.id) ||
+                        Number(m.sender_id) === Number(activeConv?.user_id);
+
                       return (
                         <div
                           key={m.id}

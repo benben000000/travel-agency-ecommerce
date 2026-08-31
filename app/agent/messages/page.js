@@ -188,7 +188,12 @@ function AgentMessagesContent() {
                     </div>
                   ) : (
                     messages.map((m) => {
-                      const isSentByMe = String(m.sender_id) === String(session?.user?.id);
+                      // In Agent Portal: The tour operator's messages belong on the RIGHT in BLUE (.sent),
+                      // and traveler inquiries belong on the LEFT in GRAY (.received).
+                      const isSentByMe =
+                        String(m.sender_id) === String(session?.user?.id) ||
+                        Number(m.sender_id) === Number(activeConv?.agent_id);
+
                       return (
                         <div
                           key={m.id}
