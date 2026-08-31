@@ -53,26 +53,40 @@ function UserMessagesContent() {
     userScrolledUpRef.current = !isNearBottom;
   }
 
-  async function fetchConversations() {
+  async function fetchConversations(targetId = null) {
     try {
       const res = await fetch('/api/conversations');
       const data = await res.json();
-      if (data.conversations) {
+      if (data.conversations && data.conversations.length > 0) {
         setConversations(data.conversations);
-        if (initialConvId) {
-          const match = data.conversations.find((c) => c.id === parseInt(initialConvId));
-          if (match) {
-            setActiveConv(match);
-            setMobileChatOpen(true);
-          } else if (data.conversations.length > 0) {
-            setActiveConv(data.conversations[0]);
-          }
-        } else if (data.conversations.length > 0) {
-          setActiveConv((prev) => prev || data.conversations[0]);
+        const savedId = typeof window !== 'undefined' ? localStorage.getItem('got_traveler_active_conv') : null;
+        const desiredId = targetId || initialConvId || savedId;
+        
+        let match = null;
+        if (desiredId) {
+          match = data.conversations.find((c) => c.id === parseInt(desiredId, 10));
+        }
+        
+        const chosen = match || data.conversations[0];
+        setActiveConv(chosen);
+        if (chosen) {
+          try {
+            localStorage.setItem('got_traveler_active_conv', chosen.id.toString());
+            window.history.replaceState(null, '', `?conversation=${chosen.id}`);
+          } catch (e) {}
         }
       }
     } catch (err) {}
     setLoading(false);
+  }
+
+  function handleSelectConversation(conv) {
+    setActiveConv(conv);
+    setMobileChatOpen(true);
+    try {
+      localStorage.setItem('got_traveler_active_conv', conv.id.toString());
+      window.history.replaceState(null, '', `?conversation=${conv.id}`);
+    } catch (e) {}
   }
 
   async function fetchMessages(convId, silent = false) {
@@ -158,10 +172,7 @@ function UserMessagesContent() {
                 <div
                   key={c.id}
                   className={`chat-sidebar-item ${isSelected ? 'active' : ''}`}
-                  onClick={() => {
-                    setActiveConv(c);
-                    setMobileChatOpen(true);
-                  }}
+                  onClick={() => handleSelectConversation(c)}
                 >
                   <div className="chat-name">{otherName}</div>
                   {c.package_title && (
