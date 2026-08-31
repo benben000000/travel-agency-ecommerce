@@ -235,11 +235,12 @@ export default function CreatePackagePage() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Region *</label>
+              <label className="form-label">Region / Continent *</label>
               <select
                 className="form-select"
                 value={form.region}
-                onChange={(e) => setForm({ ...form, region: e.target.value })}
+                onChange={(e) => setForm({ ...form, region: e.target.value, category: form.category || e.target.value })}
+                required
               >
                 <option value="Asia">Asia</option>
                 <option value="Europe">Europe</option>
@@ -253,14 +254,21 @@ export default function CreatePackagePage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Destination Category</label>
+              <label className="form-label">Destination Region Category *</label>
               <select
                 className="form-select"
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
+                required
               >
-                <option value="">Select Category</option>
-                {destinationCategories.map((c) => (
+                <option value="">Select Destination Region</option>
+                <option value="Asia">Asia</option>
+                <option value="Europe">Europe</option>
+                <option value="Americas">Americas</option>
+                <option value="Africa">Africa</option>
+                <option value="Oceania">Oceania</option>
+                <option value="Middle East">Middle East</option>
+                {destinationCategories.filter(c => !['Asia', 'Europe', 'Americas', 'Africa', 'Oceania', 'Middle East'].includes(c.name)).map((c) => (
                   <option key={c.id} value={c.name}>
                     {c.name}
                   </option>
@@ -268,14 +276,20 @@ export default function CreatePackagePage() {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Activity Type</label>
+              <label className="form-label">Activity Style *</label>
               <select
                 className="form-select"
                 value={form.activity_type}
                 onChange={(e) => setForm({ ...form, activity_type: e.target.value })}
+                required
               >
-                <option value="">Select Activity</option>
-                {activityCategories.map((c) => (
+                <option value="">Select Activity Style</option>
+                <option value="Adventure & Wildlife">Adventure & Wildlife</option>
+                <option value="Cultural & Heritage">Cultural & Heritage</option>
+                <option value="Culinary & Wine">Culinary & Wine</option>
+                <option value="Hiking & Trekking">Hiking & Trekking</option>
+                <option value="Luxury & Relaxation">Luxury & Relaxation</option>
+                {activityCategories.filter(c => !['Adventure & Wildlife', 'Cultural & Heritage', 'Culinary & Wine', 'Hiking & Trekking', 'Luxury & Relaxation'].includes(c.name)).map((c) => (
                   <option key={c.id} value={c.name}>
                     {c.name}
                   </option>

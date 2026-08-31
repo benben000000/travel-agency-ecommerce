@@ -32,17 +32,32 @@ export async function GET(request) {
     }
 
     if (search) {
-      where.push('(p.title LIKE ? OR p.destination LIKE ? OR p.country LIKE ? OR p.description LIKE ?)');
-      const s = `%${search}%`;
-      params.push(s, s, s, s);
+      where.push('(LOWER(p.title) LIKE ? OR LOWER(p.destination) LIKE ? OR LOWER(p.country) LIKE ? OR LOWER(p.description) LIKE ? OR LOWER(p.category) LIKE ? OR LOWER(p.activity_type) LIKE ?)');
+      const s = `%${search.toLowerCase()}%`;
+      params.push(s, s, s, s, s, s);
     }
     if (category) {
-      where.push('(p.category = ? OR p.activity_type = ?)');
-      params.push(category, category);
+      const catLower = category.toLowerCase();
+      where.push(`(
+        LOWER(p.category) = ? OR 
+        LOWER(p.activity_type) LIKE ? OR
+        (? = 'adventure' AND (LOWER(p.activity_type) LIKE '%adventure%' OR LOWER(p.activity_type) LIKE '%wildlife%')) OR
+        (? = 'cultural' AND (LOWER(p.activity_type) LIKE '%cultural%' OR LOWER(p.activity_type) LIKE '%heritage%')) OR
+        (? = 'culinary' AND (LOWER(p.activity_type) LIKE '%culinary%' OR LOWER(p.activity_type) LIKE '%wine%' OR LOWER(p.activity_type) LIKE '%food%')) OR
+        (? = 'trekking' AND (LOWER(p.activity_type) LIKE '%hiking%' OR LOWER(p.activity_type) LIKE '%trekking%')) OR
+        (? = 'relaxation' AND (LOWER(p.activity_type) LIKE '%relax%' OR LOWER(p.activity_type) LIKE '%luxury%'))
+      )`);
+      params.push(catLower, `%${catLower}%`, catLower, catLower, catLower, catLower, catLower);
     }
     if (destination) {
-      where.push('(p.region = ? OR p.destination LIKE ?)');
-      params.push(destination, `%${destination}%`);
+      const destClean = destination.toLowerCase().replace(/-/g, ' ');
+      where.push(`(
+        LOWER(p.region) = ? OR 
+        LOWER(p.region) = ? OR 
+        LOWER(p.destination) LIKE ? OR
+        LOWER(p.country) LIKE ?
+      )`);
+      params.push(destination.toLowerCase(), destClean, `%${destClean}%`, `%${destClean}%`);
     }
     if (minPrice) {
       where.push('p.price_amount >= ?');
@@ -53,8 +68,18 @@ export async function GET(request) {
       params.push(parseInt(maxPrice) * 100);
     }
     if (duration) {
-      where.push('p.duration_days <= ?');
-      params.push(parseInt(duration));
+      if (duration === '1-5') {
+        where.push('p.duration_days BETWEEN 1 AND 5');
+      } else if (duration === '6-8') {
+        where.push('p.duration_days BETWEEN 6 AND 8');
+      } else if (duration === '9-14') {
+        where.push('p.duration_days BETWEEN 9 AND 14');
+      } else if (duration === '15+') {
+        where.push('p.duration_days >= 15');
+      } else {
+        where.push('p.duration_days <= ?');
+        params.push(parseInt(duration));
+      }
     }
     if (agentId) {
       where.push('p.agent_id = ?');

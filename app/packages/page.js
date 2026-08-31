@@ -175,10 +175,10 @@ function PackagesContent() {
             onChange={(e) => setFilters({ ...filters, duration: e.target.value })}
           >
             <option value="">Any Duration</option>
-            <option value="3">Up to 3 Days</option>
-            <option value="7">Up to 7 Days</option>
-            <option value="14">Up to 14 Days</option>
-            <option value="30">Up to 30 Days</option>
+            <option value="1-5">Short (1 - 5 Days)</option>
+            <option value="6-8">Standard (6 - 8 Days)</option>
+            <option value="9-14">Extended (9 - 14 Days)</option>
+            <option value="15+">Grand (15+ Days)</option>
           </select>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button type="submit" className="btn btn-primary btn-sm">
