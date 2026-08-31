@@ -30,15 +30,46 @@ export default function AIConcierge() {
     '💰 Trips under $2,500',
   ];
 
+  // Load persisted guest count and chat history on mount
+  useEffect(() => {
+    try {
+      const savedCount = localStorage.getItem('got_ai_guest_count');
+      if (savedCount !== null) {
+        setGuestCount(parseInt(savedCount, 10) || 0);
+      }
+      const savedHistory = localStorage.getItem('got_ai_chat_history');
+      if (savedHistory) {
+        const parsed = JSON.parse(savedHistory);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  // Save chat history to localStorage
+  useEffect(() => {
+    if (messages.length > 1) {
+      try {
+        localStorage.setItem('got_ai_chat_history', JSON.stringify(messages));
+      } catch (e) {}
+    }
+  }, [messages]);
+
   useEffect(() => {
     if (session?.user?.name) {
       const firstName = session.user.name.split(' ')[0];
-      setMessages([
-        {
-          role: 'assistant',
-          content: `Hi ${firstName}! I am your 24/7 AI Travel Concierge. Where would you like to travel next? Ask me about destinations, budgets, or custom itineraries!`,
-        },
-      ]);
+      setMessages((prev) => {
+        if (prev.length <= 1) {
+          return [
+            {
+              role: 'assistant',
+              content: `Hi ${firstName}! I am your 24/7 AI Travel Concierge. Where would you like to travel next? Ask me about destinations, budgets, or custom itineraries!`,
+            },
+          ];
+        }
+        return prev;
+      });
     }
   }, [session?.user?.name]);
 
@@ -59,7 +90,13 @@ export default function AIConcierge() {
     setLoading(true);
 
     if (isGuest) {
-      setGuestCount((prev) => prev + 1);
+      setGuestCount((prev) => {
+        const next = prev + 1;
+        try {
+          localStorage.setItem('got_ai_guest_count', next.toString());
+        } catch (e) {}
+        return next;
+      });
     }
 
     try {
