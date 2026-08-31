@@ -1802,6 +1802,37 @@ p:last-child { margin-bottom: 0; }
   white-space: nowrap;
 }
 
+.loc-thumb-box {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg-alt);
+}
+
+.loc-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.package-item {
+  padding: 8px 16px;
+}
+
+.loc-badge.price-badge {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.location-suggestion-item:hover .loc-badge.price-badge {
+  background: #ffffff;
+  color: var(--color-primary);
+}
+
 .location-suggestion-item.selected .loc-badge,
 .location-suggestion-item:hover .loc-badge {
   background: var(--color-primary);
