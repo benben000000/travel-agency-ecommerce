@@ -1,9 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+const PAGE_SIZE = 10;
+
 export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     fetchInquiries();
@@ -17,6 +20,9 @@ export default function AdminInquiriesPage() {
     } catch (err) {}
     setLoading(false);
   }
+
+  const visibleInquiries = inquiries.slice(0, visibleCount);
+  const hasMore = visibleCount < inquiries.length;
 
   return (
     <div>
@@ -53,7 +59,7 @@ export default function AdminInquiriesPage() {
                 </tr>
               </thead>
               <tbody>
-                {inquiries.map((inq) => (
+                {visibleInquiries.map((inq) => (
                   <tr key={inq.id}>
                     <td>
                       <div style={{ fontWeight: '600' }}>{inq.name}</div>
@@ -73,6 +79,18 @@ export default function AdminInquiriesPage() {
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              >
+                Load More Inquiries ({visibleInquiries.length} of {inquiries.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

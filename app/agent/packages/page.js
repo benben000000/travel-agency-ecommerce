@@ -3,14 +3,18 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
+const PAGE_SIZE = 10;
+
 export default function AgentPackagesPage() {
   const { data: session } = useSession();
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
     fetchPackages();
   }, [session, statusFilter]);
 
@@ -64,13 +68,16 @@ export default function AgentPackagesPage() {
     }
   }
 
+  const visiblePackages = packages.slice(0, visibleCount);
+  const hasMore = visibleCount < packages.length;
+
   return (
     <div>
       <div className="dashboard-header">
         <div>
           <h1>My Travel Listings</h1>
           <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
-            Create and maintain your published tour packages and travel experiences.
+            Manage and publish tour packages, day-by-day itineraries, and pricing.
           </p>
         </div>
         <Link href="/agent/packages/new" className="btn btn-primary btn-sm">
@@ -83,7 +90,7 @@ export default function AgentPackagesPage() {
           className={`btn btn-sm ${statusFilter === '' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setStatusFilter('')}
         >
-          All
+          All Listings ({packages.length})
         </button>
         <button
           className={`btn btn-sm ${statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'}`}
@@ -95,7 +102,7 @@ export default function AgentPackagesPage() {
           className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setStatusFilter('pending')}
         >
-          Pending
+          Pending Review
         </button>
         <button
           className={`btn btn-sm ${statusFilter === 'archived' ? 'btn-primary' : 'btn-secondary'}`}
@@ -110,15 +117,13 @@ export default function AgentPackagesPage() {
           <div className="loading-spinner"></div>
         </div>
       ) : packages.length === 0 ? (
-        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
-          <h3>No Listings Found</h3>
-          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
-            {statusFilter
-              ? `No travel listings match status '${statusFilter}'.`
-              : "You haven't published any travel packages yet."}
+        <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
+          <h3>No Listings Created Yet</h3>
+          <p style={{ color: 'var(--color-text-secondary)', margin: '12px 0 24px' }}>
+            Publish your first travel itinerary bundle to receive direct traveler bookings.
           </p>
-          <Link href="/agent/packages/new" className="btn btn-primary btn-sm">
-            Create Your First Listing
+          <Link href="/agent/packages/new" className="btn btn-primary">
+            Create First Package Listing
           </Link>
         </div>
       ) : (
@@ -127,59 +132,57 @@ export default function AgentPackagesPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Title</th>
-                  <th>Destination</th>
+                  <th>Title & Destination</th>
                   <th>Duration</th>
                   <th>Price</th>
                   <th>Status</th>
+                  <th>Featured</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {packages.map((pkg) => (
+                {visiblePackages.map((pkg) => (
                   <tr key={pkg.id}>
                     <td>
                       <div style={{ fontWeight: '600' }}>
                         <Link href={`/packages/${pkg.slug}`}>{pkg.title}</Link>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        Category: {pkg.category || 'General'}
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                        {pkg.destination || 'Global'}
                       </div>
                     </td>
-                    <td>{pkg.destination || 'Global'}</td>
-                    <td>
-                      {pkg.duration_days} Day(s) {pkg.duration_nights ? `/ ${pkg.duration_nights} Night(s)` : ''}
-                    </td>
-                    <td style={{ fontWeight: '600' }}>
-                      ${(pkg.price_amount / 100).toFixed(2)} {pkg.price_currency}
+                    <td>{pkg.duration_days} Days / {pkg.duration_nights || (pkg.duration_days - 1)} Nights</td>
+                    <td style={{ fontWeight: 'bold' }}>
+                      ${(pkg.price_amount / 100).toFixed(2)}
                     </td>
                     <td>
                       <span className={getStatusClass(pkg.status)}>{pkg.status}</span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.85rem', color: pkg.featured ? 'var(--color-primary)' : 'var(--color-text-light)', fontWeight: '600' }}>
+                        {pkg.featured ? 'Featured' : 'Standard'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                         <Link href={`/agent/packages/${pkg.id}/edit`} className="btn btn-secondary btn-sm">
                           Edit
                         </Link>
                         <button
                           type="button"
-                          className="btn btn-sm"
-                          style={{
-                            borderColor: 'var(--color-border)',
-                            color: pkg.status === 'active' ? 'var(--color-text-secondary)' : 'var(--color-primary)',
-                          }}
+                          className="btn btn-secondary btn-sm"
                           onClick={() => toggleStatus(pkg)}
                         >
-                          {pkg.status === 'active' ? 'Archive' : 'Activate'}
+                          {pkg.status === 'active' ? 'Archive' : 'Publish'}
                         </button>
                         <button
                           type="button"
                           className="btn btn-sm"
                           style={{ color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
-                          onClick={() => handleDelete(pkg.id)}
                           disabled={deletingId === pkg.id}
+                          onClick={() => handleDelete(pkg.id)}
                         >
-                          {deletingId === pkg.id ? '...' : 'Delete'}
+                          Delete
                         </button>
                       </div>
                     </td>
@@ -188,6 +191,18 @@ export default function AgentPackagesPage() {
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              >
+                Load More Listings ({visiblePackages.length} of {packages.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

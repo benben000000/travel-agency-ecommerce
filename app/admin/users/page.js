@@ -1,12 +1,16 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+const PAGE_SIZE = 15;
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
     fetchUsers();
   }, [roleFilter]);
 
@@ -34,6 +38,9 @@ export default function AdminUsersPage() {
     } catch (err) {}
   }
 
+  const visibleUsers = users.slice(0, visibleCount);
+  const hasMore = visibleCount < users.length;
+
   return (
     <div>
       <div className="dashboard-header">
@@ -50,7 +57,7 @@ export default function AdminUsersPage() {
           className={`btn btn-sm ${roleFilter === '' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setRoleFilter('')}
         >
-          All Roles
+          All Roles ({users.length})
         </button>
         <button
           className={`btn btn-sm ${roleFilter === 'user' ? 'btn-primary' : 'btn-secondary'}`}
@@ -80,7 +87,7 @@ export default function AdminUsersPage() {
         <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
           <h3>No Users Found</h3>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            No accounts match the selected role.
+            No user accounts match the selected filter.
           </p>
         </div>
       ) : (
@@ -89,53 +96,61 @@ export default function AdminUsersPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>User Name</th>
+                  <th>User / Name</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th>Phone</th>
-                  <th>Bookings</th>
+                  <th>Phone / Info</th>
                   <th>Status</th>
+                  <th>Joined Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
+                {visibleUsers.map((u) => (
                   <tr key={u.id}>
                     <td>
                       <div style={{ fontWeight: '600' }}>{u.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-light)' }}>
-                        Registered {new Date(u.created_at).toLocaleDateString()}
-                      </div>
+                      {u.company_name && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                          {u.company_name}
+                        </div>
+                      )}
                     </td>
                     <td>{u.email}</td>
                     <td>
                       <span
+                        className="status-label"
                         style={{
-                          textTransform: 'uppercase',
-                          fontSize: '0.75rem',
-                          fontWeight: 'bold',
-                          letterSpacing: '0.5px',
-                          color: u.role === 'admin' ? 'var(--color-danger)' : u.role === 'agent' ? 'var(--color-accent)' : 'inherit',
+                          color: u.role === 'admin' ? 'var(--color-danger)' : u.role === 'agent' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                          borderColor: 'currentColor',
                         }}
                       >
                         {u.role}
                       </span>
                     </td>
-                    <td>{u.phone || 'None'}</td>
-                    <td>{u.booking_count || 0}</td>
                     <td>
-                      <span className={u.is_active ? 'status-label status-active' : 'status-label status-cancelled'}>
-                        {u.is_active ? 'Active' : 'Disabled'}
+                      <div>{u.phone || '—'}</div>
+                    </td>
+                    <td>
+                      <span className={u.is_active ? 'status-label status-confirmed' : 'status-label status-cancelled'}>
+                        {u.is_active ? 'Active' : 'Suspended'}
                       </span>
+                    </td>
+                    <td style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>
+                      {new Date(u.created_at).toLocaleDateString()}
                     </td>
                     <td>
                       {u.role !== 'admin' && (
                         <button
                           type="button"
-                          className="btn btn-secondary btn-sm"
+                          className="btn btn-sm"
+                          style={{
+                            color: u.is_active ? 'var(--color-danger)' : 'var(--color-success)',
+                            borderColor: 'currentColor',
+                          }}
                           onClick={() => toggleStatus(u)}
                         >
-                          {u.is_active ? 'Disable' : 'Enable'}
+                          {u.is_active ? 'Suspend' : 'Activate'}
                         </button>
                       )}
                     </td>
@@ -144,6 +159,18 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              >
+                Load More Users ({visibleUsers.length} of {users.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

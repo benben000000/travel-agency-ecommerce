@@ -3,6 +3,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+const PAGE_SIZE = 10;
+
 function AdminPackagesContent() {
   const searchParams = useSearchParams();
   const agentId = searchParams.get('agent_id');
@@ -10,8 +12,10 @@ function AdminPackagesContent() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
     fetchPackages();
   }, [statusFilter, agentId]);
 
@@ -21,7 +25,7 @@ function AdminPackagesContent() {
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
       if (agentId) params.set('agent_id', agentId);
-      params.set('limit', '100');
+      params.set('limit', '200');
 
       const res = await fetch(`/api/packages?${params.toString()}`);
       const data = await res.json();
@@ -75,6 +79,9 @@ function AdminPackagesContent() {
     }
   }
 
+  const visiblePackages = packages.slice(0, visibleCount);
+  const hasMore = visibleCount < packages.length;
+
   return (
     <div>
       <div className="dashboard-header">
@@ -94,7 +101,7 @@ function AdminPackagesContent() {
           className={`btn btn-sm ${statusFilter === '' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setStatusFilter('')}
         >
-          All
+          All ({packages.length})
         </button>
         <button
           className={`btn btn-sm ${statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'}`}
@@ -145,7 +152,7 @@ function AdminPackagesContent() {
                 </tr>
               </thead>
               <tbody>
-                {packages.map((pkg) => (
+                {visiblePackages.map((pkg) => (
                   <tr key={pkg.id}>
                     <td>
                       <div style={{ fontWeight: '600' }}>
@@ -230,6 +237,18 @@ function AdminPackagesContent() {
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              >
+                Load More Listings ({visiblePackages.length} of {packages.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -2,13 +2,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+const PAGE_SIZE = 10;
+
 export default function AgentBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
     fetchBookings();
   }, [statusFilter]);
 
@@ -50,6 +54,9 @@ export default function AgentBookingsPage() {
     }
   }
 
+  const visibleBookings = bookings.slice(0, visibleCount);
+  const hasMore = visibleCount < bookings.length;
+
   return (
     <div>
       <div className="dashboard-header">
@@ -66,7 +73,7 @@ export default function AgentBookingsPage() {
           className={`btn btn-sm ${statusFilter === '' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setStatusFilter('')}
         >
-          All
+          All ({bookings.length})
         </button>
         <button
           className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-secondary'}`}
@@ -104,7 +111,7 @@ export default function AgentBookingsPage() {
           <p style={{ color: 'var(--color-text-secondary)' }}>
             {statusFilter
               ? `No bookings match status '${statusFilter}'.`
-              : 'No travelers have booked your packages yet.'}
+              : 'You have not received any client bookings yet.'}
           </p>
         </div>
       ) : (
@@ -113,74 +120,85 @@ export default function AgentBookingsPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Ref #</th>
-                  <th>Customer</th>
+                  <th>Booking Ref</th>
+                  <th>Traveler</th>
                   <th>Package</th>
-                  <th>Date / Guests</th>
-                  <th>Total</th>
+                  <th>Travel Dates</th>
+                  <th>Guests</th>
+                  <th>Total Price</th>
                   <th>Status</th>
+                  <th>Payment</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b) => (
+                {visibleBookings.map((b) => (
                   <tr key={b.id}>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.booking_ref}</td>
+                    <td>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                        {b.booking_ref}
+                      </span>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-light)' }}>
+                        {new Date(b.created_at).toLocaleDateString()}
+                      </div>
+                    </td>
                     <td>
                       <div style={{ fontWeight: '600' }}>{b.user_name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        {b.contact_email} {b.contact_phone ? `\u2022 ${b.contact_phone}` : ''}
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                        {b.contact_email || b.user_email}
                       </div>
                     </td>
-                    <td>{b.package_title}</td>
                     <td>
-                      <div>{b.start_date || 'Flexible'}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        {b.guests_count} guest{b.guests_count > 1 ? 's' : ''}
-                      </div>
+                      <Link href={`/packages/${b.package_slug}`} style={{ fontWeight: '600' }}>
+                        {b.package_title}
+                      </Link>
                     </td>
-                    <td style={{ fontWeight: '600' }}>
-                      ${(b.total_amount / 100).toFixed(2)} {b.currency}
+                    <td>
+                      {b.start_date ? (
+                        <span style={{ fontSize: '0.85rem' }}>
+                          {b.start_date} &rarr; {b.end_date}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-light)', fontSize: '0.85rem' }}>Flexible</span>
+                      )}
+                    </td>
+                    <td>{b.guests_count}</td>
+                    <td style={{ fontWeight: 'bold' }}>
+                      ${(b.total_amount / 100).toFixed(2)}
                     </td>
                     <td>
                       <span className={getStatusClass(b.status)}>{b.status}</span>
                     </td>
                     <td>
+                      <span className={b.payment_status === 'paid' ? 'status-label status-confirmed' : 'status-label status-pending'}>
+                        {b.payment_status}
+                      </span>
+                    </td>
+                    <td>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <Link href={`/agent/bookings/${b.id}`} className="btn btn-secondary btn-sm">
+                          Details
+                        </Link>
                         {b.status === 'pending' && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                              onClick={() => updateStatus(b.id, 'confirmed')}
-                              disabled={updatingId === b.id}
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-danger btn-sm"
-                              onClick={() => updateStatus(b.id, 'rejected')}
-                              disabled={updatingId === b.id}
-                            >
-                              Reject
-                            </button>
-                          </>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            disabled={updatingId === b.id}
+                            onClick={() => updateStatus(b.id, 'confirmed')}
+                          >
+                            Confirm
+                          </button>
                         )}
                         {b.status === 'confirmed' && (
                           <button
                             type="button"
-                            className="btn btn-sm"
-                            style={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}
-                            onClick={() => updateStatus(b.id, 'completed')}
+                            className="btn btn-secondary btn-sm"
                             disabled={updatingId === b.id}
+                            onClick={() => updateStatus(b.id, 'completed')}
                           >
-                            Mark Completed
+                            Complete
                           </button>
                         )}
-                        <Link href={`/agent/bookings/${b.id}`} className="btn btn-secondary btn-sm">
-                          Details
-                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -188,6 +206,18 @@ export default function AgentBookingsPage() {
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              >
+                Load More Bookings ({visibleBookings.length} of {bookings.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { StarRating } from '@/components/StarRating';
 
+const PAGE_SIZE = 10;
+
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   
   // Review Modal State
   const [reviewModal, setReviewModal] = useState({ open: false, booking: null, rating: 5, comment: '', submitting: false, error: '' });
@@ -15,6 +18,7 @@ export default function MyBookingsPage() {
   const [cancelModal, setCancelModal] = useState({ open: false, booking: null, reason: '', submitting: false, error: '' });
 
   useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
     fetchBookings();
   }, [statusFilter]);
 
@@ -89,9 +93,13 @@ export default function MyBookingsPage() {
       case 'pending': return 'status-label status-pending';
       case 'cancelled': return 'status-label status-cancelled';
       case 'completed': return 'status-label status-completed';
+      case 'rejected': return 'status-label status-rejected';
       default: return 'status-label';
     }
   }
+
+  const visibleBookings = bookings.slice(0, visibleCount);
+  const hasMore = visibleCount < bookings.length;
 
   return (
     <div>
@@ -112,7 +120,7 @@ export default function MyBookingsPage() {
           className={`btn btn-sm ${statusFilter === '' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setStatusFilter('')}
         >
-          All
+          All ({bookings.length})
         </button>
         <button
           className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-secondary'}`}
@@ -171,7 +179,7 @@ export default function MyBookingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b) => (
+                {visibleBookings.map((b) => (
                   <tr key={b.id}>
                     <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.booking_ref}</td>
                     <td>
@@ -223,6 +231,18 @@ export default function MyBookingsPage() {
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div style={{ textAlign: 'center', padding: '20px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              >
+                Load More Bookings ({visibleBookings.length} of {bookings.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -241,23 +261,19 @@ export default function MyBookingsPage() {
             </div>
             <form onSubmit={handleCancelBooking}>
               <div className="modal-body">
-                {cancelModal.error && (
-                  <div style={{ padding: '10px 14px', background: '#f8d7da', color: '#721c24', marginBottom: '16px', fontSize: '0.85rem' }}>
-                    {cancelModal.error}
-                  </div>
-                )}
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
-                  Are you sure you want to cancel your booking for <strong>{cancelModal.booking?.package_title}</strong>?
+                <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
+                  Are you sure you want to cancel your reservation for <strong>{cancelModal.booking?.package_title}</strong>?
                 </p>
+                {cancelModal.error && <div className="alert alert-danger">{cancelModal.error}</div>}
                 <div className="form-group">
-                  <label className="form-label">Reason for cancellation (optional)</label>
+                  <label className="form-label">Reason for Cancellation (Optional)</label>
                   <textarea
-                    rows={3}
                     className="form-textarea"
+                    rows="3"
                     value={cancelModal.reason}
-                    onChange={(e) => setCancelModal({ ...cancelModal, reason: e.target.value })}
-                    placeholder="Please let the tour agent know why you need to cancel..."
-                  />
+                    onChange={(e) => setCancelModal((m) => ({ ...m, reason: e.target.value }))}
+                    placeholder="Let us know why you need to cancel..."
+                  ></textarea>
                 </div>
               </div>
               <div className="modal-footer">
@@ -282,7 +298,7 @@ export default function MyBookingsPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Write Review for {reviewModal.booking?.package_title}</h3>
+              <h3>Review Trip ({reviewModal.booking?.package_title})</h3>
               <button
                 className="modal-close"
                 onClick={() => setReviewModal({ open: false, booking: null, rating: 5, comment: '', submitting: false, error: '' })}
@@ -292,30 +308,24 @@ export default function MyBookingsPage() {
             </div>
             <form onSubmit={handleSubmitReview}>
               <div className="modal-body">
-                {reviewModal.error && (
-                  <div style={{ padding: '10px 14px', background: '#f8d7da', color: '#721c24', marginBottom: '16px', fontSize: '0.85rem' }}>
-                    {reviewModal.error}
-                  </div>
-                )}
+                {reviewModal.error && <div className="alert alert-danger">{reviewModal.error}</div>}
                 <div className="form-group">
                   <label className="form-label">Your Rating</label>
-                  <div style={{ padding: '8px 0' }}>
-                    <StarRating
-                      value={reviewModal.rating}
-                      onChange={(r) => setReviewModal({ ...reviewModal, rating: r })}
-                    />
-                  </div>
+                  <StarRating
+                    value={reviewModal.rating}
+                    onChange={(val) => setReviewModal((m) => ({ ...m, rating: val }))}
+                  />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Your Review & Experience</label>
+                  <label className="form-label">Review Comments</label>
                   <textarea
-                    rows={4}
-                    required
                     className="form-textarea"
+                    required
+                    rows="4"
                     value={reviewModal.comment}
-                    onChange={(e) => setReviewModal({ ...reviewModal, comment: e.target.value })}
-                    placeholder="Share details about the tour guide, accommodations, activities, and overall experience..."
-                  />
+                    onChange={(e) => setReviewModal((m) => ({ ...m, comment: e.target.value }))}
+                    placeholder="Share your travel experience, guide feedback, and highlights..."
+                  ></textarea>
                 </div>
               </div>
               <div className="modal-footer">
@@ -324,10 +334,10 @@ export default function MyBookingsPage() {
                   className="btn btn-secondary btn-sm"
                   onClick={() => setReviewModal({ open: false, booking: null, rating: 5, comment: '', submitting: false, error: '' })}
                 >
-                  Cancel
+                  Close
                 </button>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={reviewModal.submitting}>
-                  {reviewModal.submitting ? 'Submitting...' : 'Submit Review'}
+                  {reviewModal.submitting ? 'Submitting...' : 'Post Review'}
                 </button>
               </div>
             </form>
