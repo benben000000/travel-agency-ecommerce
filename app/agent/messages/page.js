@@ -127,11 +127,15 @@ function AgentMessagesContent() {
       });
       const data = await res.json();
       if (data.message) {
-        setMessages((prev) => [...prev, data.message]);
+        const toAdd = [data.message];
+        if (data.replyMessage) {
+          toAdd.push(data.replyMessage);
+        }
+        setMessages((prev) => [...prev, ...toAdd]);
         setConversations((prev) =>
           prev.map((c) =>
             c.id === activeConv.id
-              ? { ...c, last_message: msgContent, last_message_at: new Date().toISOString() }
+              ? { ...c, last_message: data.replyMessage?.content || msgContent, last_message_at: new Date().toISOString() }
               : c
           )
         );

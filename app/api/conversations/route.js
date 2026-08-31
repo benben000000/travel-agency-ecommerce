@@ -3,11 +3,18 @@ import { getDb } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/auth';
 
+import { syncConversationToNeon, hydrateFromNeon } from '@/lib/neon-sync';
+
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const db = getDb();
+    
+    if (process.env.DATABASE_URL) {
+      await hydrateFromNeon(db);
+    }
+
     const uid = parseInt(session.user.id);
     let conversations;
     if (session.user.role === 'admin') {
@@ -66,6 +73,10 @@ export async function POST(request) {
     const body = await request.json();
     const uid = parseInt(session.user.id);
     
+    if (process.env.DATABASE_URL) {
+      await hydrateFromNeon(db);
+    }
+
     let userId;
     let agentId;
     
@@ -87,7 +98,13 @@ export async function POST(request) {
       conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(res.lastInsertRowid);
     } else if (body.booking_id && !conv.booking_id) {
       db.prepare('UPDATE conversations SET booking_id = ? WHERE id = ?').run(body.booking_id, conv.id);
+      conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(conv.id);
     }
+
+    if (process.env.DATABASE_URL && conv) {
+      await syncConversationToNeon(conv);
+    }
+
     return NextResponse.json({ conversation: conv }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

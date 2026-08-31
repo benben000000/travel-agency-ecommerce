@@ -4,6 +4,8 @@ import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/auth';
 import { generateAgentAutoReply } from '@/lib/ai';
 
+import { syncMessageToNeon, hydrateFromNeon } from '@/lib/neon-sync';
+
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,6 +17,12 @@ export async function GET(request) {
 
     if (conversationIdParam) {
       const convId = parseInt(conversationIdParam);
+      
+      // Hydrate from Neon on Vercel to ensure cross-container persistence
+      if (process.env.DATABASE_URL) {
+        await hydrateFromNeon(db);
+      }
+
       const conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(convId);
       if (!conv) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       if (conv.user_id !== uid && conv.agent_id !== uid && session.user.role !== 'admin') {
@@ -47,6 +55,10 @@ export async function POST(request) {
     const targetConvId = parseInt(conversation_id || conversationId);
     if (!targetConvId || !content) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
+    if (process.env.DATABASE_URL) {
+      await hydrateFromNeon(db);
+    }
+
     const conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(targetConvId);
     if (!conv) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
 
@@ -66,37 +78,53 @@ export async function POST(request) {
       WHERE m.id = ?
     `).get(res.lastInsertRowid);
 
-    // AI AUTO-RESPONDER: If the sender is a traveler, automatically generate a warm, human-like host reply
-    const isTravelerSender = uid === conv.user_id || session.user.role === 'user';
-    if (isTravelerSender && process.env.HUGGINGFACE_API_KEY) {
-      // Execute in background without blocking initial message response
-      (async () => {
-        try {
-          // Small realistic human pause (1.5 - 2.5s)
-          await new Promise((resolve) => setTimeout(resolve, 1800));
-
-          const aiReply = await generateAgentAutoReply({
-            conv,
-            travelerMessage: trimmedContent,
-            travelerName: session.user.name,
-            db,
-          });
-
-          if (aiReply) {
-            db.prepare('INSERT INTO messages (conversation_id, sender_id, content, read) VALUES (?, ?, ?, 0)').run(
-              targetConvId,
-              conv.agent_id,
-              aiReply
-            );
-            db.prepare("UPDATE conversations SET last_message_at = datetime('now') WHERE id = ?").run(targetConvId);
-          }
-        } catch (aiErr) {
-          console.warn('AI Auto-reply background error:', aiErr.message);
-        }
-      })();
+    // Sync traveler message to Neon
+    if (process.env.DATABASE_URL) {
+      await syncMessageToNeon(newMessage);
     }
 
-    return NextResponse.json({ success: true, message: newMessage }, { status: 201 });
+    // AI AUTO-RESPONDER: If the sender is a traveler, synchronously generate and commit host reply
+    let agentReplyMessage = null;
+    const isTravelerSender = uid === conv.user_id || session.user.role === 'user';
+    if (isTravelerSender && process.env.HUGGINGFACE_API_KEY) {
+      try {
+        const aiReply = await generateAgentAutoReply({
+          conv,
+          travelerMessage: trimmedContent,
+          travelerName: session.user.name,
+          db,
+        });
+
+        if (aiReply) {
+          const aiRes = db.prepare('INSERT INTO messages (conversation_id, sender_id, content, read) VALUES (?, ?, ?, 0)').run(
+            targetConvId,
+            conv.agent_id,
+            aiReply
+          );
+          db.prepare("UPDATE conversations SET last_message_at = datetime('now') WHERE id = ?").run(targetConvId);
+
+          agentReplyMessage = db.prepare(`
+            SELECT m.*, u.name as sender_name
+            FROM messages m
+            LEFT JOIN users u ON m.sender_id = u.id
+            WHERE m.id = ?
+          `).get(aiRes.lastInsertRowid);
+
+          // Sync AI agent message to Neon
+          if (process.env.DATABASE_URL) {
+            await syncMessageToNeon(agentReplyMessage);
+          }
+        }
+      } catch (aiErr) {
+        console.warn('AI Auto-reply error:', aiErr.message);
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: newMessage, 
+      replyMessage: agentReplyMessage 
+    }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
