@@ -14,7 +14,7 @@ function UserMessagesContent() {
   const [inputMsg, setInputMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef(null);
+  const chatMessagesBoxRef = useRef(null);
 
   useEffect(() => {
     fetchConversations();
@@ -30,8 +30,11 @@ function UserMessagesContent() {
     }
   }, [activeConv]);
 
+  // Scroll ONLY the inner chat messages container to the bottom, without scrolling the main page window
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatMessagesBoxRef.current) {
+      chatMessagesBoxRef.current.scrollTop = chatMessagesBoxRef.current.scrollHeight;
+    }
   }, [messages]);
 
   async function fetchConversations() {
@@ -156,7 +159,7 @@ function UserMessagesContent() {
                   </div>
                 </div>
 
-                <div className="chat-messages">
+                <div className="chat-messages" ref={chatMessagesBoxRef}>
                   {messages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'var(--color-text-light)', marginTop: '40px' }}>
                       No messages in this conversation yet. Send a message to start chatting!
@@ -177,7 +180,6 @@ function UserMessagesContent() {
                       );
                     })
                   )}
-                  <div ref={messagesEndRef} />
                 </div>
 
                 <form className="chat-input-area" onSubmit={handleSend}>
