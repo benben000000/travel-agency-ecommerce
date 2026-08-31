@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/auth';
+import { generateAgentAutoReply } from '@/lib/ai';
 
 export async function GET(request) {
   try {
@@ -54,7 +55,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const res = db.prepare('INSERT INTO messages (conversation_id, sender_id, content, read) VALUES (?, ?, ?, 0)').run(targetConvId, uid, content.trim());
+    const trimmedContent = content.trim();
+    const res = db.prepare('INSERT INTO messages (conversation_id, sender_id, content, read) VALUES (?, ?, ?, 0)').run(targetConvId, uid, trimmedContent);
     db.prepare("UPDATE conversations SET last_message_at = datetime('now') WHERE id = ?").run(targetConvId);
 
     const newMessage = db.prepare(`
@@ -63,6 +65,36 @@ export async function POST(request) {
       LEFT JOIN users u ON m.sender_id = u.id
       WHERE m.id = ?
     `).get(res.lastInsertRowid);
+
+    // AI AUTO-RESPONDER: If the sender is a traveler, automatically generate a warm, human-like host reply
+    const isTravelerSender = uid === conv.user_id || session.user.role === 'user';
+    if (isTravelerSender && process.env.HUGGINGFACE_API_KEY) {
+      // Execute in background without blocking initial message response
+      (async () => {
+        try {
+          // Small realistic human pause (1.5 - 2.5s)
+          await new Promise((resolve) => setTimeout(resolve, 1800));
+
+          const aiReply = await generateAgentAutoReply({
+            conv,
+            travelerMessage: trimmedContent,
+            travelerName: session.user.name,
+            db,
+          });
+
+          if (aiReply) {
+            db.prepare('INSERT INTO messages (conversation_id, sender_id, content, read) VALUES (?, ?, ?, 0)').run(
+              targetConvId,
+              conv.agent_id,
+              aiReply
+            );
+            db.prepare("UPDATE conversations SET last_message_at = datetime('now') WHERE id = ?").run(targetConvId);
+          }
+        } catch (aiErr) {
+          console.warn('AI Auto-reply background error:', aiErr.message);
+        }
+      })();
+    }
 
     return NextResponse.json({ success: true, message: newMessage }, { status: 201 });
   } catch (error) {

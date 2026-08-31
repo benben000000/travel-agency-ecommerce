@@ -3,6 +3,7 @@ import AuthProvider from '@/components/AuthProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import AIConcierge from '@/components/AIConcierge';
 
 export const metadata = {
   title: 'Global One Travel - Your Gateway to Extraordinary Journeys',
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
             <Header />
             {children}
             <Footer />
+            <AIConcierge />
           </ThemeProvider>
         </AuthProvider>
       </body>
