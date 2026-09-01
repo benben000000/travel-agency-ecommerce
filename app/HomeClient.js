@@ -118,12 +118,13 @@ export default function HomeClient({ packages, destinations, activities, setting
 
   return (
     <main>
-      {/* ===== VIBRANT HERO SECTION WITH BACKGROUND VIDEO ===== */}
-      <div className="container hero-wrapper">
+      {/* ===== FULL-BLEED CINEMATIC HERO SECTION WITH BACKGROUND VIDEO ===== */}
+      <div className="fullscreen-hero-wrapper">
         <HeroVideo />
 
         {/* ===== FLOATING INTERACTIVE SEARCH CARD ===== */}
-        <div className="floating-search-card">
+        <div className="container hero-search-container">
+          <div className="floating-search-card">
           <div className="search-tabs">
             <button
               type="button"
@@ -236,6 +237,7 @@ export default function HomeClient({ packages, destinations, activities, setting
           </form>
         </div>
       </div>
+    </div>
 
       {/* ===== FEATURED PACKAGES SECTION ===== */}
       <section className="section">

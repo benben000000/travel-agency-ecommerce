@@ -44,7 +44,7 @@ export default function HeroVideo() {
   const current = VIBES[index];
 
   return (
-    <div className="hero-card hero-video-card">
+    <div className="hero-fullscreen">
       {/* Background Videos with Smooth Cross-fade */}
       <div className="hero-video-container">
         {VIBES.map((vibe, idx) => (
@@ -65,20 +65,22 @@ export default function HeroVideo() {
 
       <div className="hero-overlay"></div>
 
-      <div className="hero-content">
-        <h1 key={`title-${index}`} className="hero-text-fade">
-          {current.title}
-        </h1>
-        <p key={`desc-${index}`} className="hero-text-fade">
-          {current.desc}
-        </p>
-        <div className="hero-actions">
-          <Link href="/packages" className="btn btn-white btn-lg">
-            Get Started
-          </Link>
-          <Link href="/packages" className="btn btn-outline-white btn-lg">
-            View Packages
-          </Link>
+      <div className="container hero-content-container">
+        <div className="hero-content">
+          <h1 key={`title-${index}`} className="hero-text-fade">
+            {current.title}
+          </h1>
+          <p key={`desc-${index}`} className="hero-text-fade">
+            {current.desc}
+          </p>
+          <div className="hero-actions">
+            <Link href="/packages" className="btn btn-white btn-lg">
+              Get Started
+            </Link>
+            <Link href="/packages" className="btn btn-outline-white btn-lg">
+              View Packages
+            </Link>
+          </div>
         </div>
       </div>
     </div>
