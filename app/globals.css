@@ -386,7 +386,7 @@ p:last-child { margin-bottom: 0; }
 
 .hero-card {
   position: relative;
-  background-color: #0284c7;
+  background-color: #0f172a;
   border-radius: var(--radius-xl);
   padding: 60px 48px 120px;
   color: #ffffff;
