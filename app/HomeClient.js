@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PackageCard from '@/components/PackageCard';
 import LocationAutocomplete from '@/components/LocationAutocomplete';
-import DynamicHero from '@/components/DynamicHero';
+import HeroVideo from '@/components/HeroVideo';
 
 export default function HomeClient({ packages, destinations, activities, settings }) {
   const router = useRouter();
@@ -118,9 +118,9 @@ export default function HomeClient({ packages, destinations, activities, setting
 
   return (
     <main>
-      {/* ===== VIBRANT DYNAMIC HERO SECTION ===== */}
+      {/* ===== VIBRANT HERO SECTION WITH BACKGROUND VIDEO ===== */}
       <div className="container hero-wrapper">
-        <DynamicHero />
+        <HeroVideo />
 
         {/* ===== FLOATING INTERACTIVE SEARCH CARD ===== */}
         <div className="floating-search-card">
