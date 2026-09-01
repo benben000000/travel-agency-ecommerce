@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PackageCard from '@/components/PackageCard';
 import LocationAutocomplete from '@/components/LocationAutocomplete';
+import DynamicHero from '@/components/DynamicHero';
 
 export default function HomeClient({ packages, destinations, activities, settings }) {
   const router = useRouter();
@@ -117,25 +118,9 @@ export default function HomeClient({ packages, destinations, activities, setting
 
   return (
     <main>
-      {/* ===== VIBRANT HERO SECTION ===== */}
+      {/* ===== VIBRANT DYNAMIC HERO SECTION ===== */}
       <div className="container hero-wrapper">
-        <div className="hero-card">
-          <div className="hero-overlay"></div>
-          <div className="hero-content">
-            <h1>Adventure Starts With Your Journey</h1>
-            <p>
-              Curated itineraries, certified tour operators, and personalized travel paths across the world extraordinary destinations.
-            </p>
-            <div className="hero-actions">
-              <Link href="/packages" className="btn btn-white btn-lg">
-                Get Started
-              </Link>
-              <Link href="/packages" className="btn btn-outline-white btn-lg">
-                View Packages
-              </Link>
-            </div>
-          </div>
-        </div>
+        <DynamicHero />
 
         {/* ===== FLOATING INTERACTIVE SEARCH CARD ===== */}
         <div className="floating-search-card">
