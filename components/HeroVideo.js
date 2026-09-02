@@ -30,7 +30,7 @@ const VIBES = [
   },
 ];
 
-export default function HeroVideo() {
+export default function HeroVideo({ children }) {
   const [index, setIndex] = useState(0);
   const videoRefs = useRef([]);
 
@@ -90,16 +90,24 @@ export default function HeroVideo() {
       {/* Cinematic Dark Gradient Overlay for Maximum Legibility */}
       <div className="hero-overlay"></div>
 
-      {/* Centered Clean Typography & Action Buttons */}
+      {/* Centered Clean Typography & In-Hero Search Card */}
       <div className="container hero-content-container">
-        <div className="hero-content">
+        <div className="hero-content hero-content-centered">
           <h1 key={`title-${index}`} className="hero-text-fade">
             {current.title}
           </h1>
           <p key={`desc-${index}`} className="hero-text-fade">
             {current.desc}
           </p>
-          <div className="hero-actions">
+
+          {/* Search Card Centered Inside Hero */}
+          {children && (
+            <div className="hero-centered-search-wrap">
+              {children}
+            </div>
+          )}
+
+          <div className="hero-actions hero-actions-centered">
             <Link href="/packages" className="btn btn-white btn-lg">
               Get Started
             </Link>
